@@ -18,6 +18,10 @@ public class PlayerController : MonoBehaviour
     private bool canGoUp = true;
     private bool canGoDown = true;
     public float movementSpeed;
+    public int dashCooldown;
+    public int dashCooldownSet = 250;
+    public string lastMove;
+    public int lastMoveTime;
 
     // Start is called before the first frame update
     void Start()
@@ -26,6 +30,7 @@ public class PlayerController : MonoBehaviour
         velocity = new Vector3(0F, 0F, 0F);
         movementSpeed = 0.2F;
         animator = GetComponent<Animator>();
+        dashCooldown = 0;
     }
 
     // Update is called once per frame
@@ -36,33 +41,86 @@ public class PlayerController : MonoBehaviour
         {
             if(canGoUp){
                 hasPressedMove = true;
-                velocity.y += movementSpeed * Time.deltaTime;
+                if(lastMove.Equals("Up") && lastMoveTime < 20){
+                    Dash("Up");
+                }else{
+                    velocity.y += movementSpeed * Time.deltaTime;
+                }
                 running = true;
             }
+        }else if (Input.GetKeyUp(KeyCode.W)){
+            lastMove = "Up";
+            lastMoveTime = 0;
         }
         if (Input.GetKey(KeyCode.S))
         {
             if(canGoDown){
                 hasPressedMove = true;
-                velocity.y -= movementSpeed * Time.deltaTime;
+                if(lastMove.Equals("Down") && lastMoveTime < 20){
+                    Dash("Down");
+                }else{
+                    velocity.y -= movementSpeed * Time.deltaTime;
+                }
+                running = true;
             }
+        }else if (Input.GetKeyUp(KeyCode.S)){
+            lastMove = "Down";
+            lastMoveTime = 0;
         }
         if (Input.GetKey(KeyCode.A))
         {   
             if(canGoLeft){
                 hasPressedMove = true;
-                velocity.x -= movementSpeed * Time.deltaTime;
+                if(lastMove.Equals("Left") && lastMoveTime < 20){
+                    Dash("Left");
+                }else{
+                    velocity.x -= movementSpeed * Time.deltaTime;
+                }
+                running = true;
             }
+        }else if (Input.GetKeyUp(KeyCode.A)){
+            lastMove = "Left";
+            lastMoveTime = 0;
         }
         if (Input.GetKey(KeyCode.D))
         {   
             if(canGoRight){
                 hasPressedMove = true;
-                velocity.x += movementSpeed * Time.deltaTime;
+                if(lastMove.Equals("Right") && lastMoveTime < 20){
+                    Dash("Right");
+                }else{
+                    velocity.x += movementSpeed * Time.deltaTime;
+                }
+                running = true;
             }
+        }else if (Input.GetKeyUp(KeyCode.D)){
+            lastMove = "Right";
+            lastMoveTime = 0;
         }
-        if(hasPressedMove == false){
+        if(!hasPressedMove){
             running = false;
+        }else{
+            running = true;
+        }
+        
+    }
+    void Dash(string Direction){
+        if(dashCooldown == 0){
+            switch(Direction){
+                case "Up":
+                    velocity.y += movementSpeed * Time.deltaTime* 75;
+                    break;
+                case "Down":
+                    velocity.y -= movementSpeed * Time.deltaTime* 75;
+                    break;
+                case "Left":
+                    velocity.x -= movementSpeed * Time.deltaTime * 75;
+                    break;
+                case "Right":
+                    velocity.x += movementSpeed * Time.deltaTime * 75;
+                    break;
+            }
+            dashCooldown = dashCooldownSet;
         }
     }
     void FixedUpdate(){
@@ -75,8 +133,20 @@ public class PlayerController : MonoBehaviour
             {
                 velocity.x += Mathf.Clamp(FrictionConstant, 0, Mathf.Abs(velocity.x));
             }
+            if(velocity.y > 0)
+            {
+                velocity.y -= Mathf.Clamp(FrictionConstant, 0, Mathf.Abs(velocity.y));
+            }
+            else if (velocity.y < 0)
+            {
+                velocity.y += Mathf.Clamp(FrictionConstant, 0, Mathf.Abs(velocity.y));
+            }
         }
         transform.position += velocity;
+        if(dashCooldown > 0){
+            dashCooldown--;
+        }
+        lastMoveTime++;
     }
     void collisionBehavior(Collision2D collision){
         Vector2 collisionVector;
@@ -85,11 +155,11 @@ public class PlayerController : MonoBehaviour
         for(int i = 0; i < collision.contactCount; i++){
             collisionVector = collision.GetContact(i).normal;
             if(collisionVector.x > 0){
-                canGoRight = false;
+                canGoLeft = false;
                 velocity.x = 0.0F;
                 xCollision = true;
             }else if (collisionVector.x < 0){
-                canGoLeft = false;
+                canGoRight = false;
                 velocity.x = 0.0F;
                 xCollision = true;
             }
@@ -118,6 +188,9 @@ public class PlayerController : MonoBehaviour
         collisionBehavior(collision);
     }
     private void OnCollisionStay2D(Collision2D collision){
+        collisionBehavior(collision);
+    }
+    private void OnCollisionExit2D(Collision2D collision){
         collisionBehavior(collision);
     }
     public void Run()
