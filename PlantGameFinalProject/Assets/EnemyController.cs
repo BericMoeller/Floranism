@@ -4,12 +4,14 @@ using UnityEngine;
 
 public class EnemyController : MonoBehaviour
 {
-    private int health;
+    protected int health;
     private int maxHealth;
+    public List<string[]> debuffs;
     // Start is called before the first frame update
     void Start()
     {
-        
+        gameObject.tag = "Enemy";
+        debuffs = new List<string[]>();
     }
 
     // Update is called once per frame
@@ -18,10 +20,17 @@ public class EnemyController : MonoBehaviour
         
     }
 
-    int getHealth(){
+    int GetHealth(){
         return health;
     }
-    void changeHealth(int healthModifier){
+    void ChangeHealth(int healthModifier){
         health += healthModifier;
+    }
+    public void Attacked(float damage, string debuff = "", int debuffTime = 0){
+        health -= (int)damage;
+        if(debuffTime != 0){
+
+        } 
+
     }
 }

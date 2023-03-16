@@ -360,7 +360,7 @@ GameObject:
   - component: {fileID: 392269278}
   m_Layer: 0
   m_Name: Player
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -483,12 +483,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   velocity: {x: 0, y: 0, z: 0}
   health: 0
-  maxHealth: 0
-  movementSpeed: 0
+  MAX_HEALTH: 0
+  MOVEMENT_SPEED: 0
   dashCooldown: 0
-  dashCooldownSet: 250
+  DASH_COOLDOWN_SET: 0
+  DASH_SPEED: 0.2
   lastMove: 
   lastMoveTime: 0
+  attackCooldown: 0
+  ATTACK_COOLDOWN_L: 0
+  ATTACK_COOLDOWN_H: 0
+  specialCooldown: 0
+  SPECIAL_COOLDOWN: 0
+  RANGE_OF_ATTACK: {x: 0, y: 0}
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0
@@ -1005,9 +1012,11 @@ GameObject:
   m_Component:
   - component: {fileID: 1973009948}
   - component: {fileID: 1973009947}
+  - component: {fileID: 1973009950}
+  - component: {fileID: 1973009949}
   m_Layer: 0
   m_Name: Enemy
-  m_TagString: Untagged
+  m_TagString: Enemy
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1052,7 +1061,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 3
+  m_SortingOrder: 2
   m_Sprite: {fileID: -2413806693520163455, guid: a86470a33a6bf42c4b3595704624658b, type: 3}
   m_Color: {r: 1, g: 0, b: 0, a: 1}
   m_FlipX: 0
@@ -1079,3 +1088,31 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1973009949
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1973009946}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5412fed11ec34894f92d5b27e959fb6f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!58 &1973009950
+CircleCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1973009946}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: 0, y: 0}
+  serializedVersion: 2
+  m_Radius: 0.5
