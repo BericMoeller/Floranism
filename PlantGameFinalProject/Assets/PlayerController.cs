@@ -43,7 +43,7 @@ public class PlayerController : MonoBehaviour
         animator = GetComponent<Animator>();
         SpriteRenderer = GetComponent<SpriteRenderer>();
         gameObject.tag = "Player";
-        RANGE_OF_ATTACK = new Vector2(2,0);
+        RANGE_OF_ATTACK = new Vector2(1,0);
         ATTACK_COOLDOWN_H = 50;
         ATTACK_COOLDOWN_L = 15;
         SPECIAL_COOLDOWN = 180;
@@ -170,7 +170,6 @@ public class PlayerController : MonoBehaviour
         float angle;
         float damage = 0.0F;
         string inflict = "";
-        Debug.Log("Attack running");
         switch(dirFacing){
             case 0:
                 angle = 0.0F;
@@ -205,11 +204,10 @@ public class PlayerController : MonoBehaviour
                 break;
         }
         Debug.Log("Attack Style = "+attackStyle+"; Damage = "+damage);
-        Collider2D[] collidersInRange= Physics2D.OverlapCapsuleAll(new Vector2(transform.position.x,transform.position.y), RANGE_OF_ATTACK, CapsuleDirection2D.Vertical, angle, 2);
-        for(int i = 0; i <collidersInRange.Length; i++){
+        Collider2D[] collidersInRange= Physics2D.OverlapCapsuleAll(new Vector2(transform.position.x,transform.position.y), RANGE_OF_ATTACK, CapsuleDirection2D.Vertical, angle);
+        for(int i = 0; i < collidersInRange.Length; i++){
             if(collidersInRange[i].tag == "Enemy"){
                 collidersInRange[i].gameObject.GetComponent<EnemyController>().Attacked(damage);
-                Debug.Log("Damage done to enemy");
             }
         }
     }
