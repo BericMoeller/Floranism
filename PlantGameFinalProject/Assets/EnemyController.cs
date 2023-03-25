@@ -11,7 +11,6 @@ public class EnemyController : MonoBehaviour
     public List<string[]> debuffs;
     public Text healthStat;
     public Collider2D targetedPlayer;
-    public bool wandering;
     public int dirFacing;
     public Vector2 dirWalking;
     public float MOVEMENT_SPEED;
@@ -26,9 +25,10 @@ public class EnemyController : MonoBehaviour
         //^ I can modify this later so it triggers more often when players are being loud
         maxHealth = 100;
         health = maxHealth + 0;
-        MOVEMENT_SPEED = 0.1F;
+        MOVEMENT_SPEED = 0.02F;
         debuffs = new List<string[]>();
         dirFacing = 0;
+        dirWalking = ChangeDirection();
     }
 
     void Update()
@@ -37,7 +37,7 @@ public class EnemyController : MonoBehaviour
     }
 
     void FixedUpdate(){
-        MakeMovementDecision(); //all of this runs once per tick
+        MakeMovementDecision(); //all of this runs once per tick. jeez
         ticksSinceLastScan++;
     }
 
@@ -59,38 +59,47 @@ public class EnemyController : MonoBehaviour
     RaycastHit2D CheckVision(bool changePower = false, Vector2 scanAngle = default)
     { //checks vision at angle or direction facing
         Vector2 angle; // this method refused to method so i don't like it.
+        Vector3 offsetDistance;
         if(!changePower){ //it's a bloody simple one too. i don't know why.
             switch(dirFacing){// update: it is 12:45 am. i am awake and staring at this. help me. pain.
                 case 0:
                     angle = Vector2.up;
+                    offsetDistance = (Vector2)transform.position + Vector2.up / 2;
                     break;
                 case 1:
                     angle = Vector2.right;
+                    offsetDistance = (Vector2)transform.position + Vector2.right / 2;
                     break;
                 case 2:
                     angle = Vector2.down;
+                    offsetDistance = (Vector2)transform.position + Vector2.down / 2;
                     break;
                 case 3:
                     angle = Vector2.left;
+                    offsetDistance = (Vector2)transform.position + Vector2.left / 2;
                     break;
                 default:
                     angle = Vector2.up;
+                    offsetDistance = (Vector2)transform.position + Vector2.up / 2;
                     break;
             }
         }else if(targetedPlayer != null){
             angle = playerChasingVector;
-        }else{
-            angle = scanAngle;
+            offsetDistance = (Vector2)transform.position + playerChasingVector / 2;
         }
-        RaycastHit2D colliderHit = Physics2D.Raycast(transform.position, angle); //gets the collider directly in front of
+        else{
+            angle = scanAngle;
+            offsetDistance = (Vector2)transform.position + scanAngle / 2;
+        }
+        RaycastHit2D colliderHit = Physics2D.Raycast(((Vector3)offsetDistance), angle); //gets the collider directly in front of
         return colliderHit; //returns
     }
 
-    RaycastHit2D[] CheckWalkingIntoSomething() //returns null if not walking into something, array with distances if yes
+    RaycastHit2D[] CheckWalkingIntoSomething(bool returnAll = false) //returns null if not walking into something, array with distances if yes
     {
         RaycastHit2D[] hitsArray;
         RaycastHit2D colliderHit = CheckVision();
-        if(colliderHit.distance < 1F){
+        if(returnAll || colliderHit.distance < 1F){
             hitsArray = new RaycastHit2D[4];
             int origDirFacing = 0+ dirFacing;
             for(int i = 0; i < 4; i++){ //checks all directions and throws it in a funky lil' array
@@ -108,7 +117,7 @@ public class EnemyController : MonoBehaviour
     void MakeMovementDecision(){ // BIG METHOD that controls all movement
         if(targetedPlayer == null){
             RaycastHit2D colliderHit = CheckVision();
-            if(colliderHit.collider.tag == "Player"){ // checks for player
+            if(colliderHit.collider.CompareTag("Player")){ // checks for player
                 targetedPlayer = colliderHit.collider;
             }else{ // usual result- does normal walking around and vibing
                 RaycastHit2D[] hits = CheckWalkingIntoSomething();
@@ -117,6 +126,7 @@ public class EnemyController : MonoBehaviour
                     int largestIndex = -1;
                     for(int i = 0; i < 4; i++){
                         if(hits[i].distance > largestDist){
+                            Debug.Log(hits[i].distance);
                             largestIndex = i;
                             largestDist = hits[i].distance;
                         }
@@ -164,23 +174,23 @@ public class EnemyController : MonoBehaviour
         Vector3 relPos = targetedPlayer.transform.localPosition;
         Vector2 playerChasingVector = relPos;
         RaycastHit2D colliderHit = CheckVision(true);
-        if(colliderHit.collider.tag != "Player"){ // well if it's going to the player it doesn't have to worry about running into walls does it
-            if(colliderHit.distance < 1){
-                int bestScore = 0;
-                int bestScoreIndex = -1;
-                int score;
-                RaycastHit2D[] hitsArray = CheckWalkingIntoSomething();  
-                for(int i = 0; i < 4; i++){ //rates each direction and goes to the best one
-                    score = RateMovementDirection(hitsArray[i].distance, playerChasingVector, ChangeDirection(i));
-                    if(bestScore < score){
-                        bestScore = score;
-                        bestScoreIndex = i;
-                    }
-                }
-                dirFacing = bestScoreIndex;
-                dirWalking = ChangeDirection();
+        int bestScore = 0;
+        int bestScoreIndex = 0;
+        int score;
+        RaycastHit2D[] hitsArray = CheckWalkingIntoSomething(true);  
+        for(int i = 0; i < 4; i++){ //rates each direction and goes to the best one
+            score = RateMovementDirection(hitsArray[i].distance, playerChasingVector, ChangeDirection(i));
+            if (hitsArray[i].collider.CompareTag("Player"))
+            {
+                bestScoreIndex = i;
+                bestScore = 500;
+            }else if(bestScore < score){
+                bestScore = score;
+                bestScoreIndex = i;
             }
         }
+        dirFacing = bestScoreIndex;
+        dirWalking = ChangeDirection();
         transform.position += (Vector3)(dirWalking * MOVEMENT_SPEED);
     }
 
@@ -191,7 +201,7 @@ public class EnemyController : MonoBehaviour
         }if(Mathf.Sign(direction.y)==Mathf.Sign(idealDirection.y)){
             score += 20;
         }
-        score += (int)(distance)*5;
+        score += (int)((distance-2F)*5);
         return score;
     }
 
@@ -199,7 +209,8 @@ public class EnemyController : MonoBehaviour
         RaycastHit2D itemScanned;
         for(float i = 0; i < 2F*Mathf.PI; i += Mathf.PI*0.2F){
             itemScanned = CheckVision(true, new Vector2(Mathf.Cos(i),Mathf.Sin(i)));
-            if(itemScanned.collider.tag == "Player"){
+            Debug.Log(itemScanned.collider.tag);
+            if(itemScanned.collider.CompareTag("Player")){
                 targetedPlayer = itemScanned.collider;
                 break;
             }
