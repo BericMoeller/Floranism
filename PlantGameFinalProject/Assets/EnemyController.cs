@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -58,10 +59,10 @@ public class EnemyController : MonoBehaviour
 
     RaycastHit2D CheckVision(bool changePower = false, Vector2 scanAngle = default)
     { //checks vision at angle or direction facing
-        Vector2 angle; // this method refused to method so i don't like it.
+        Vector2 angle;
         Vector3 offsetDistance;
-        if(!changePower){ //it's a bloody simple one too. i don't know why.
-            switch(dirFacing){// update: it is 12:45 am. i am awake and staring at this. help me. pain.
+        if(!changePower){ 
+            switch(dirFacing){
                 case 0:
                     angle = Vector2.up;
                     offsetDistance = (Vector2)transform.position + Vector2.up / 2;
@@ -83,11 +84,8 @@ public class EnemyController : MonoBehaviour
                     offsetDistance = (Vector2)transform.position + Vector2.up / 2;
                     break;
             }
-        }else if(targetedPlayer != null){
-            angle = playerChasingVector;
-            offsetDistance = (Vector2)transform.position + playerChasingVector / 2;
         }
-        else{
+        else {
             angle = scanAngle;
             offsetDistance = (Vector2)transform.position + scanAngle / 2;
         }
@@ -173,47 +171,75 @@ public class EnemyController : MonoBehaviour
     void ChasePlayer(){ // Chases player(duh)
         Vector3 relPos = targetedPlayer.transform.localPosition;
         Vector2 playerChasingVector = relPos;
-        RaycastHit2D colliderHit = CheckVision(true);
-        int bestScore = 0;
-        int bestScoreIndex = 0;
-        int score;
-        RaycastHit2D[] hitsArray = CheckWalkingIntoSomething(true);  
-        for(int i = 0; i < 4; i++){ //rates each direction and goes to the best one
-            score = RateMovementDirection(hitsArray[i].distance, playerChasingVector, ChangeDirection(i));
-            if (hitsArray[i].collider.CompareTag("Player"))
-            {
-                bestScoreIndex = i;
-                bestScore = 500;
-            }else if(bestScore < score){
-                bestScore = score;
-                bestScoreIndex = i;
-            }
-        }
-        dirFacing = bestScoreIndex;
-        dirWalking = ChangeDirection();
+        RaycastHit2D[] hitsArray = CheckWalkingIntoSomething(true);
+        dirWalking = ChasingMovementDecision(playerChasingVector);
         transform.position += (Vector3)(dirWalking * MOVEMENT_SPEED);
     }
 
-    int RateMovementDirection(float distance, Vector2 idealDirection, Vector2 direction){ //rates the quality of the direction
-        int score = 0;
-        if(Mathf.Sign(direction.x)==Mathf.Sign(idealDirection.x)){ //points go to having the same direction, and a higher distance to the wall
-            score += 20;
-        }if(Mathf.Sign(direction.y)==Mathf.Sign(idealDirection.y)){
-            score += 20;
+    Vector2 ChasingMovementDecision(Vector2 idealDirection){ //rates the quality of the direction
+        RaycastHit2D[] scanHits = ScanMode(90);
+        if (scanHits == null)
+        {
+            return idealDirection;
         }
-        score += (int)((distance-2F)*5);
-        return score;
+        else // object overcovering manuvers
+        {
+            /*
+             * ok plan for this(this is a very complicated algorithm in of itself
+             * group together colliders in a list
+             * if it's in the way of the player, choose the side with the quicker exit
+             * exit through that direction(or slightly off so enemy doesn't collide through walls)
+             */
+            List<int> colliderJumps = new List<int>();
+            for(int i = 1; i < scanHits.Length; i++)
+            {
+                if (scanHits[i].collider != scanHits[i - 1].collider && Mathf.Abs(scanHits[i].distance - scanHits[i-1].distance) > 1F)
+                {
+                    colliderJumps.Add(i);
+                }
+            }
+
+            float rad;
+            Vector2 spaceVector;
+            int closestIndex = -1;
+            float m_angle = 180.0F;
+            Vector2 closestVector = new Vector2(0, 0);
+            for(int i = 0; i < colliderJumps.Count; i++)
+            {
+                rad = (i+1)*((2 * Mathf.PI) / scanHits.Length);
+                spaceVector = new Vector2(Mathf.Cos(rad),Mathf.Sin(rad));
+                if (Mathf.Abs(Vector2.SignedAngle(spaceVector, idealDirection)) < m_angle)
+                {
+                     closestIndex = i;
+                     closestVector = spaceVector;
+                }
+            }
+            return closestVector;
+        }
     }
 
-    void ScanMode(){ //well. Scans.
+
+    RaycastHit2D[] ScanMode(int scanDensity = 20){ //well. Scans.
         RaycastHit2D itemScanned;
-        for(float i = 0; i < 2F*Mathf.PI; i += Mathf.PI*0.2F){
+        RaycastHit2D[] itemsScanned = new RaycastHit2D[scanDensity];
+        bool foundPlayer = false;
+        float scanMultiplier = 2F / scanDensity;
+        for(float i = 0; i < 2F*Mathf.PI; i += Mathf.PI*scanMultiplier){
             itemScanned = CheckVision(true, new Vector2(Mathf.Cos(i),Mathf.Sin(i)));
             Debug.Log(itemScanned.collider.tag);
             if(itemScanned.collider.CompareTag("Player")){
                 targetedPlayer = itemScanned.collider;
-                break;
+                foundPlayer = true; break;
             }
+            itemsScanned[(int)(i/Mathf.PI)] = itemScanned;
+        }
+        if (foundPlayer)
+        {
+            return null;
+        }
+        else
+        {
+            return itemsScanned;
         }
     }
 }
