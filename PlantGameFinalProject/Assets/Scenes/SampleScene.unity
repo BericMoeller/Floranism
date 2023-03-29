@@ -262,16 +262,16 @@ RectTransform:
   m_GameObject: {fileID: 121764081}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.030303031, y: 0.030303031, z: 0.030303031}
+  m_LocalScale: {x: 0.022727273, y: 0.022727273, z: 0.022727273}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 166052358}
-  m_Father: {fileID: 1973009948}
-  m_RootOrder: 0
+  m_Father: {fileID: 0}
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: -1872.8, y: 1625.2}
+  m_AnchoredPosition: {x: 18606.117, y: -16326.8}
   m_SizeDelta: {x: 5, y: 5}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &121764083
@@ -606,7 +606,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 392269273}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.94, y: -1.65, z: 0}
+  m_LocalPosition: {x: -0.02, y: -1.65, z: 0}
   m_LocalScale: {x: 0.75, y: 0.75, z: 0.75}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -988,7 +988,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1182750968}
   m_LocalRotation: {x: -0, y: -0, z: -0.30222902, w: 0.9532353}
-  m_LocalPosition: {x: 0.106, y: 0.142, z: 0}
+  m_LocalPosition: {x: 0.122, y: 0.154, z: 0}
   m_LocalScale: {x: 0.35654142, y: 0.043226246, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1139,7 +1139,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 4
+  m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1424273909
 GameObject:
@@ -1331,13 +1331,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1973009946}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -2.74, y: -1.7, z: 0}
+  m_LocalPosition: {x: -2.77, y: -1.7, z: 0}
   m_LocalScale: {x: 0.75, y: 0.75, z: 0.75}
   m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 121764082}
+  m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 3
+  m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1973009949
 MonoBehaviour:
@@ -1353,13 +1352,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   healthObject: {fileID: 0}
   health: 0
-  healthStat: {fileID: 166052359}
   targetedPlayer: {fileID: 0}
   dirFacing: 0
   dirWalking: {x: 0, y: 0}
   MOVEMENT_SPEED: 0
   playerChasingVector: {x: 0, y: 0}
   ticksSinceLastScan: 0
+  playerInSight: 0
+  wandering: 0
 --- !u!58 &1973009950
 CircleCollider2D:
   m_ObjectHideFlags: 0

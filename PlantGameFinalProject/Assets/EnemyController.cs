@@ -10,7 +10,7 @@ public class EnemyController : MonoBehaviour
     public int health;
     private int maxHealth;
     public List<string[]> debuffs;
-    public Text healthStat;
+    //public Text healthStat;
     public Collider2D targetedPlayer;
     public int dirFacing;
     public Vector2 dirWalking;
@@ -18,6 +18,8 @@ public class EnemyController : MonoBehaviour
     public Vector2 playerChasingVector = new Vector2(0,0);
     public int ticksSinceLastScan = 0;
     private int paranoiaLevel;
+    public bool playerInSight;
+    public bool wandering;
 
     void Start()
     {
@@ -30,11 +32,12 @@ public class EnemyController : MonoBehaviour
         debuffs = new List<string[]>();
         dirFacing = 0;
         dirWalking = ChangeDirection();
+        wandering = true;
     }
 
     void Update()
     {
-        healthStat.text = ""+health;
+        //healthStat.text = ""+health;
     }
 
     void FixedUpdate(){
@@ -87,7 +90,7 @@ public class EnemyController : MonoBehaviour
         }
         else {
             angle = scanAngle;
-            offsetDistance = (Vector2)transform.position + scanAngle / 2;
+            offsetDistance = (Vector2)transform.position + scanAngle.normalized / 2;
         }
         RaycastHit2D colliderHit = Physics2D.Raycast(((Vector3)offsetDistance), angle); //gets the collider directly in front of
         return colliderHit; //returns
@@ -113,10 +116,11 @@ public class EnemyController : MonoBehaviour
     }
 
     void MakeMovementDecision(){ // BIG METHOD that controls all movement
-        if(targetedPlayer == null){
+        if(wandering){
             RaycastHit2D colliderHit = CheckVision();
             if(colliderHit.collider.CompareTag("Player")){ // checks for player
                 targetedPlayer = colliderHit.collider;
+                wandering = false;
             }else{ // usual result- does normal walking around and vibing
                 RaycastHit2D[] hits = CheckWalkingIntoSomething();
                 if(hits != null){
@@ -169,18 +173,21 @@ public class EnemyController : MonoBehaviour
     }
 
     void ChasePlayer(){ // Chases player(duh)
-        Vector3 relPos = targetedPlayer.transform.localPosition;
-        Vector2 playerChasingVector = relPos;
+        this.playerChasingVector = targetedPlayer.transform.position - transform.position;
         RaycastHit2D[] hitsArray = CheckWalkingIntoSomething(true);
-        dirWalking = ChasingMovementDecision(playerChasingVector);
-        transform.position += (Vector3)(dirWalking * MOVEMENT_SPEED);
+        dirWalking = ChasingMovementDecision(this.playerChasingVector);    
+        if (CheckVision(true, dirWalking).distance > 0.1F)
+        {
+            transform.position += (Vector3)(dirWalking * MOVEMENT_SPEED);
+        }
     }
 
     Vector2 ChasingMovementDecision(Vector2 idealDirection){ //rates the quality of the direction
         RaycastHit2D[] scanHits = ScanMode(90);
         if (scanHits == null)
         {
-            return idealDirection;
+            playerInSight = true;
+            return idealDirection.normalized;
         }
         else // object overcovering manuvers
         {
@@ -190,46 +197,57 @@ public class EnemyController : MonoBehaviour
              * if it's in the way of the player, choose the side with the quicker exit
              * exit through that direction(or slightly off so enemy doesn't collide through walls)
              */
+            playerInSight = false;
             List<int> colliderJumps = new List<int>();
+            float distanceJump;
+            bool colliderSwitch;
             for(int i = 1; i < scanHits.Length; i++)
             {
-                if (scanHits[i].collider != scanHits[i - 1].collider && Mathf.Abs(scanHits[i].distance - scanHits[i-1].distance) > 1F)
+                distanceJump = Mathf.Abs(scanHits[i].distance - scanHits[i - 1].distance);
+                colliderSwitch = scanHits[i].collider != scanHits[i - 1].collider;
+                Debug.Log("Hit index: "+i+"/"+scanHits.Length+"; Distance Jump: "+(float)distanceJump+"; Colliders Switched:"+ colliderSwitch);
+                if (colliderSwitch && distanceJump > 1F)
                 {
                     colliderJumps.Add(i);
+                    //Debug.Log("ColliderJump rel location: " + scanHits[i].collider.transform.localPosition);
                 }
             }
-
             float rad;
             Vector2 spaceVector;
             int closestIndex = -1;
-            float m_angle = 180.0F;
+            float m_angle = 360.0F;
             Vector2 closestVector = new Vector2(0, 0);
             for(int i = 0; i < colliderJumps.Count; i++)
             {
-                rad = (i+1)*((2 * Mathf.PI) / scanHits.Length);
+                rad = colliderJumps[i]*((2 * Mathf.PI) / scanHits.Length);
                 spaceVector = new Vector2(Mathf.Cos(rad),Mathf.Sin(rad));
-                if (Mathf.Abs(Vector2.SignedAngle(spaceVector, idealDirection)) < m_angle)
+                //Debug.Log("Radians: " + rad + "; CurrentVector: " + spaceVector + "; IdealVector: " + idealDirection +"; Possibilities: "+ colliderJumps.Count);
+                if ((Mathf.Abs(Vector2.SignedAngle(spaceVector, idealDirection)) < m_angle) && CheckVision(true, spaceVector).distance > 0.1F)
                 {
-                     closestIndex = i;
+                     closestIndex = colliderJumps[i];
                      closestVector = spaceVector;
                 }
+               
             }
-            return closestVector;
+            Debug.Log("Winning Vector: "+ BoundsOffset(closestVector.normalized)+"; Options: "+colliderJumps.Count);
+            return BoundsOffset(closestVector.normalized);
         }
     }
 
 
     RaycastHit2D[] ScanMode(int scanDensity = 20){ //well. Scans.
         RaycastHit2D itemScanned;
-        RaycastHit2D[] itemsScanned = new RaycastHit2D[scanDensity];
         bool foundPlayer = false;
+        RaycastHit2D[] itemsScanned = new RaycastHit2D[scanDensity];
         float scanMultiplier = 2F / scanDensity;
         for(float i = 0; i < 2F*Mathf.PI; i += Mathf.PI*scanMultiplier){
             itemScanned = CheckVision(true, new Vector2(Mathf.Cos(i),Mathf.Sin(i)));
-            Debug.Log(itemScanned.collider.tag);
+            Debug.Log(i);
             if(itemScanned.collider.CompareTag("Player")){
                 targetedPlayer = itemScanned.collider;
-                foundPlayer = true; break;
+                wandering = false;
+                foundPlayer = true;
+                break;
             }
             itemsScanned[(int)(i/Mathf.PI)] = itemScanned;
         }
@@ -241,5 +259,26 @@ public class EnemyController : MonoBehaviour
         {
             return itemsScanned;
         }
+    }
+    Vector2 BoundsOffset(Vector2 direction)
+    {
+        float offset = 0.5F;
+        if (direction.x > 0)
+        {
+            direction.x += offset;
+        }
+        else if (direction.x < 0)
+        {
+            direction.x -= offset;
+        }
+        if (direction.y > 0)
+        {
+            direction.y += offset;
+        }
+        else if (direction.y < 0)
+        {
+            direction.y -= offset;
+        }
+        return direction;
     }
 }
