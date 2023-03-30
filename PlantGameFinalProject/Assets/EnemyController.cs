@@ -2,15 +2,14 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.U2D;
 using UnityEngine.UI;
 
 public class EnemyController : MonoBehaviour
-{
-    public GameObject healthObject; 
+{  //instance variables (shocker that one is)
     public int health;
     private int maxHealth;
     public List<string[]> debuffs;
-    //public Text healthStat;
     public Collider2D targetedPlayer;
     public int dirFacing;
     public Vector2 dirWalking;
@@ -20,24 +19,35 @@ public class EnemyController : MonoBehaviour
     private int paranoiaLevel;
     public bool playerInSight;
     public bool wandering;
+    public bool canGoLeft;
+    public bool canGoRight;
+    public bool canGoUp;
+    public bool canGoDown;
+    private float RADIUS;
+    private float cornerBuffer;
 
     void Start()
     {
         gameObject.tag = "Enemy";
         paranoiaLevel = 150; //decreasing this increases the speed that scans occur
-        //^ I can modify this later so it triggers more often when players are being loud
-        maxHealth = 100;
+        //^ I can modify this later so it triggers more often when players are being annoying
+        maxHealth = 100; //^or if i'm bored it'd be a fun gamemode to have everything hate you
         health = maxHealth + 0;
         MOVEMENT_SPEED = 0.02F;
         debuffs = new List<string[]>();
         dirFacing = 0;
-        dirWalking = ChangeDirection();
+        dirWalking = ChangeDirection(); //this just instantilizes it to the dirFacing (0), meaning the vector would be (0,1)
         wandering = true;
+        canGoLeft = true;
+        canGoRight = true;
+        canGoUp = true;
+        canGoDown = true;
+        RADIUS = 0.5F;
+        cornerBuffer = 0.3F;
     }
 
     void Update()
     {
-        //healthStat.text = ""+health;
     }
 
     void FixedUpdate(){
@@ -92,7 +102,7 @@ public class EnemyController : MonoBehaviour
             angle = scanAngle;
             offsetDistance = (Vector2)transform.position + scanAngle.normalized / 2;
         }
-        RaycastHit2D colliderHit = Physics2D.Raycast(((Vector3)offsetDistance), angle); //gets the collider directly in front of
+        RaycastHit2D colliderHit = Physics2D.Raycast(((Vector3)offsetDistance), angle); //gets the collider directly in front of it
         return colliderHit; //returns
     }
 
@@ -148,7 +158,7 @@ public class EnemyController : MonoBehaviour
     }
 
     Vector2 ChangeDirection(int direction = -1){ //converts my dumb dirFacing variable to the smart Vector2 dirWalking value
-        if(direction == -1){
+        if(direction == -1){ //dirFacing is mostly used for animations and math- so it's useful but not good for movement
             direction = dirFacing;
         }
         Vector2 dirWalkingExit;
@@ -175,15 +185,13 @@ public class EnemyController : MonoBehaviour
     void ChasePlayer(){ // Chases player(duh)
         this.playerChasingVector = targetedPlayer.transform.position - transform.position;
         RaycastHit2D[] hitsArray = CheckWalkingIntoSomething(true);
-        dirWalking = ChasingMovementDecision(this.playerChasingVector);    
-        if (CheckVision(true, dirWalking).distance > 0.1F)
-        {
-            transform.position += (Vector3)(dirWalking * MOVEMENT_SPEED);
-        }
+        dirWalking = ChasingMovementDecision(this.playerChasingVector);
+        EnemyMove(dirWalking);
     }
 
     Vector2 ChasingMovementDecision(Vector2 idealDirection){ //rates the quality of the direction
-        RaycastHit2D[] scanHits = ScanMode(90);
+        RaycastHit2D[] scanHits = ScanMode(90); // input... argument! that's what it's called? i think? always forget. it controls the number of times it scans within the circle
+        //^360 would be every degree. 90 or more seems to work pretty well though
         if (scanHits == null)
         {
             playerInSight = true;
@@ -192,21 +200,23 @@ public class EnemyController : MonoBehaviour
         else // object overcovering manuvers
         {
             /*
-             * ok plan for this(this is a very complicated algorithm in of itself
+             * ok plan for this(this is a very complicated algorithm in of itself)
              * group together colliders in a list
              * if it's in the way of the player, choose the side with the quicker exit
              * exit through that direction(or slightly off so enemy doesn't collide through walls)
+             * 
+             * edit: It has been roughly 4 days since i wrote that explanation. very complicated does not cover it. i am still debugging.
              */
             playerInSight = false;
             List<int> colliderJumps = new List<int>();
             float distanceJump;
             bool colliderSwitch;
-            for(int i = 1; i < scanHits.Length; i++)
+            for(int i = 1; i < scanHits.Length; i++)//compiles all suitable jumps into a list (jumps must be substansial and shift colliders)
             {
                 distanceJump = Mathf.Abs(scanHits[i].distance - scanHits[i - 1].distance);
                 colliderSwitch = scanHits[i].collider != scanHits[i - 1].collider;
-                Debug.Log("Hit index: "+i+"/"+scanHits.Length+"; Distance Jump: "+(float)distanceJump+"; Colliders Switched:"+ colliderSwitch);
-                if (colliderSwitch && distanceJump > 1F)
+                //Debug.Log("Hit index: "+i+"/"+scanHits.Length+"; Distance Jump: "+(float)distanceJump+"; Colliders Switched:"+ colliderSwitch);
+                if (colliderSwitch && distanceJump > RADIUS*2)
                 {
                     colliderJumps.Add(i);
                     //Debug.Log("ColliderJump rel location: " + scanHits[i].collider.transform.localPosition);
@@ -215,22 +225,24 @@ public class EnemyController : MonoBehaviour
             float rad;
             Vector2 spaceVector;
             int closestIndex = -1;
-            float m_angle = 360.0F;
-            Vector2 closestVector = new Vector2(0, 0);
-            for(int i = 0; i < colliderJumps.Count; i++)
+            float closestAngle = 360.0F;
+            for(int i = 0; i < colliderJumps.Count; i++) //finds best jump
             {
                 rad = colliderJumps[i]*((2 * Mathf.PI) / scanHits.Length);
                 spaceVector = new Vector2(Mathf.Cos(rad),Mathf.Sin(rad));
                 //Debug.Log("Radians: " + rad + "; CurrentVector: " + spaceVector + "; IdealVector: " + idealDirection +"; Possibilities: "+ colliderJumps.Count);
-                if ((Mathf.Abs(Vector2.SignedAngle(spaceVector, idealDirection)) < m_angle) && CheckVision(true, spaceVector).distance > 0.1F)
+                if ((Mathf.Abs(Vector2.SignedAngle(spaceVector, idealDirection)) < closestAngle) && scanHits[colliderJumps[i]].distance > MOVEMENT_SPEED)
                 {
-                     closestIndex = colliderJumps[i];
-                     closestVector = spaceVector;
+                    closestIndex = colliderJumps[i];
+                    closestAngle = 360 / scanHits.Length * closestIndex;
                 }
                
             }
-            Debug.Log("Winning Vector: "+ BoundsOffset(closestVector.normalized)+"; Options: "+colliderJumps.Count);
-            return BoundsOffset(closestVector.normalized);
+            float offset = BoundsOffset(closestIndex, scanHits); //calculates offset so it can actually go around corners
+            float endRad = closestIndex * ((2 * Mathf.PI) / scanHits.Length) + offset; 
+            Vector2 endVector = new Vector2(Mathf.Cos(endRad), Mathf.Sin(endRad)); //takes radial output and converts it to the smarter Vector2 for movement
+            //Debug.Log("Winning index: "+closestIndex+"; Options: "+colliderJumps.Count);
+            return endVector.normalized;
         }
     }
 
@@ -238,20 +250,27 @@ public class EnemyController : MonoBehaviour
     RaycastHit2D[] ScanMode(int scanDensity = 20){ //well. Scans.
         RaycastHit2D itemScanned;
         bool foundPlayer = false;
+        bool nearbyWall = false;
         RaycastHit2D[] itemsScanned = new RaycastHit2D[scanDensity];
-        float scanMultiplier = 2F / scanDensity;
-        for(float i = 0; i < 2F*Mathf.PI; i += Mathf.PI*scanMultiplier){
-            itemScanned = CheckVision(true, new Vector2(Mathf.Cos(i),Mathf.Sin(i)));
-            Debug.Log(i);
+        float scanLimiter = 2*Mathf.PI/scanDensity;
+        float angle;
+        for(int i = 0; i < scanDensity; i += 1){
+            angle = scanLimiter*i;
+            itemScanned = CheckVision(true, new Vector2(Mathf.Cos(angle),Mathf.Sin(angle)));
+            //Debug.Log(angle+"-"+i);
             if(itemScanned.collider.CompareTag("Player")){
                 targetedPlayer = itemScanned.collider;
                 wandering = false;
                 foundPlayer = true;
                 break;
             }
-            itemsScanned[(int)(i/Mathf.PI)] = itemScanned;
+            else if(itemScanned.distance < 0.1F+RADIUS && itemScanned.collider.CompareTag("Wall"))
+            {
+                nearbyWall = true;
+            }
+            itemsScanned[i] = itemScanned;
         }
-        if (foundPlayer)
+        if (foundPlayer && !nearbyWall)
         {
             return null;
         }
@@ -260,25 +279,96 @@ public class EnemyController : MonoBehaviour
             return itemsScanned;
         }
     }
-    Vector2 BoundsOffset(Vector2 direction)
+    void EnemyMove(Vector2 movementDir) //this checks that the enemy isn't colliding with anything before moving
     {
-        float offset = 0.5F;
-        if (direction.x > 0)
+        if (!canGoLeft && movementDir.x<0F)
         {
-            direction.x += offset;
+            movementDir.x = 0F;
         }
-        else if (direction.x < 0)
+        if (!canGoRight && movementDir.x > 0F)
         {
-            direction.x -= offset;
+            movementDir.x = 0F;
         }
-        if (direction.y > 0)
+        if (!canGoDown && movementDir.y < 0F)
         {
-            direction.y += offset;
+            movementDir.y = 0F;
         }
-        else if (direction.y < 0)
+        if (!canGoUp && movementDir.y > 0F)
         {
-            direction.y -= offset;
+            movementDir.y = 0F;
         }
-        return direction;
+        transform.position += (Vector3)(movementDir * MOVEMENT_SPEED);
+    }
+    float BoundsOffset(int idealIndex, RaycastHit2D[] allHits) //does a bunch of math to find out how far we need to overshoot to get around corners
+    { // i have very strong feelings about trig (and none of them are positive)
+        int index;
+        float polarity;
+        if (allHits[idealIndex].distance > allHits[idealIndex - 1].distance)//checks polarity
+        {
+            index = idealIndex - 1;
+            polarity = 1.2F;
+        }
+        else
+        {
+            index = idealIndex;
+            polarity = -1.2F;//AND THERE IS SO MUCH TRIG IN THIS
+        }
+        float CornerDist = allHits[index].distance;
+        float offset = Mathf.Atan((RADIUS+cornerBuffer) / CornerDist) * polarity;//MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
+        //Debug.Log("polarity = " + offset);
+        return offset;
+    }
+    void CollisionBehavior(Collision2D collision) //just checks what directions we can't move in (yanked this straight from playerController)
+    {
+        Debug.Log("collision");
+        Vector2 collisionVector;
+        bool xCollision = false;
+        bool yCollision = false;
+        for (int i = 0; i < collision.contactCount; i++)
+        {
+            collisionVector = collision.GetContact(i).normal;
+            if (collisionVector.x > 0)
+            {
+                canGoLeft = false;
+                xCollision = true;
+            }
+            else if (collisionVector.x < 0)
+            {
+                canGoRight = false;
+                xCollision = true;
+            }
+            if (collisionVector.y > 0)
+            {
+                canGoDown = false;
+                yCollision = true;
+            }
+            else if (collisionVector.y < 0)
+            {
+                canGoUp = false;
+                yCollision = true;
+            }
+        }
+        if (!xCollision)
+        {
+            canGoLeft = true;
+            canGoRight = true;
+        }
+        if (!yCollision)
+        {
+            canGoUp = true;
+            canGoDown = true;
+        }
+    }
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        CollisionBehavior(collision);
+    }
+    private void OnCollisionStay2D(Collision2D collision)
+    {
+        CollisionBehavior(collision);
+    }
+    private void OnCollisionExit2D(Collision2D collision)
+    {
+        CollisionBehavior(collision);
     }
 }
