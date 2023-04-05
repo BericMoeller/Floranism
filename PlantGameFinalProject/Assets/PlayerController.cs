@@ -31,6 +31,9 @@ public class PlayerController : MonoBehaviour
     public int specialCooldown;
     public int SPECIAL_COOLDOWN;
     public Vector2 RANGE_OF_ATTACK;
+    public float blockCharge;
+    public int BLOCK_QUANTITY;
+    public bool isBlocking;
 
     // Start is called before the first frame update
     void Start()
@@ -47,6 +50,9 @@ public class PlayerController : MonoBehaviour
         ATTACK_COOLDOWN_H = 50;
         ATTACK_COOLDOWN_L = 15;
         SPECIAL_COOLDOWN = 180;
+        BLOCK_QUANTITY = 30;
+        blockCharge = BLOCK_QUANTITY + 0;
+        isBlocking = false;
         
     }
 
@@ -68,10 +74,38 @@ public class PlayerController : MonoBehaviour
                 Attack("Special");
             }
         }
-        if(Input.GetKeyDown(KeyCode.Semicolon)){
-            //enter
+        if (Input.GetKey(KeyCode.B))
+        {
+            isBlocking = true;
+        }
+        else
+        {
+            isBlocking = false;
+        }
+        if (Input.GetKeyDown(KeyCode.Semicolon)){
+            //enter /  interact button
         }
     }
+    public void Attacked(float damage, string debuff = "", int debuffTime = 0)
+    { // player is attacked(by enemy)
+        if (isBlocking && blockCharge > damage)
+        {
+            blockCharge -= damage;
+        }
+        else if (isBlocking)
+        {
+            health -= (int)(damage-blockCharge);
+            blockCharge = 0;
+        }
+        else
+        {
+            health -= (int)damage; //^ their feelings were hurt v.v
+        }
+        if (debuffTime != 0)
+        {
+        }
+    }
+    
     void MovementMechanism()
     {
         hasPressedMoveX = false;
@@ -244,6 +278,10 @@ public class PlayerController : MonoBehaviour
             specialCooldown--;
         }
         lastMoveTime++;
+        if(blockCharge < BLOCK_QUANTITY && !isBlocking)
+        {
+            blockCharge+=0.5F;
+        }
     }
     void collisionBehavior(Collision2D collision){
         Vector2 collisionVector;
