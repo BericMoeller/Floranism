@@ -320,14 +320,15 @@ public class EnemyController : MonoBehaviour
 
     Vector2 MoveAroundObstacle(Vector2 currentDirectionToMove) // i added this cus it kept getting stuck on corners
     { //idk man i'm so far down this rabbit hole
-        int deg = (int)Vector2.SignedAngle(Vector2.up, currentDirectionToMove) * -1;
+        int deg = (int)Vector2.SignedAngle(Vector2.up, currentDirectionToMove);
         if (deg < 0)
         {
             deg += 360;
         }
         int scanDensity = 100; //this changes a few things but mostly accuracy of scans
-        int scanOffset = scanDensity / 4; // 90->~22.5, 360 to 90, etc
-        RaycastHit2D[] forwardScan = ScanMode(scanDensity, deg - scanOffset, deg + scanOffset, true);
+        int degToScanRatio = scanDensity / 360;
+        int scanOffset = scanDensity / 4;
+        RaycastHit2D[] forwardScan = ScanMode(scanDensity, deg*degToScanRatio-scanOffset, deg*degToScanRatio+scanOffset, true);
         float closestDist = 500F;
         int closestIndex = -1;
         bool objectInRange = false;
@@ -345,7 +346,7 @@ public class EnemyController : MonoBehaviour
         }
         if (objectInRange)
         {
-            //Debug.Log("ClosestDist: " + closestDist+"; Deg travelling: "+deg);
+            //Debug.Log("ClosestDist: " + closestDist+"; Deg travelling: "+deg+"; ClosestIndex: "+closestIndex);
             int targetDeg;
             int degToAvoid = deg - scanOffset + closestIndex * (360 / scanDensity); // calculated from above
             int angle = (int)(Mathf.Rad2Deg * Mathf.Atan((RADIUS + cornerBuffer) / closestDist));
@@ -359,7 +360,7 @@ public class EnemyController : MonoBehaviour
             }
             float rad = Mathf.Deg2Rad * targetDeg;
             Vector2 directionModded = new Vector2(Mathf.Cos(rad), Mathf.Sin(rad));
-            Debug.Log("""Degree Heading: " + degToAvoid+"; Final Direction: " + targetDeg + "; Radial Conversion: " + rad+ "; DirectionModded: " + directionModded);
+            Debug.Log("Degree Heading: " + degToAvoid+"; Final Direction: " + targetDeg + "; Radial Conversion: " + rad+ "; DirectionModded: " + directionModded);
             return directionModded;
         }
         else
