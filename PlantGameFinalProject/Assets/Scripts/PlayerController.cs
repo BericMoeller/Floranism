@@ -9,6 +9,7 @@ public class PlayerController : MonoBehaviour
     Animator animator;
     bool runningX = false;
     bool runningY = false;
+    bool facingRight = true;
     public int dirFacing = 0; // 0 is up, 1 is right, 2 is down, 3 is left
     SpriteRenderer SpriteRenderer;
     bool hasPressedMoveY;
@@ -34,6 +35,9 @@ public class PlayerController : MonoBehaviour
     public float blockCharge;
     public int BLOCK_QUANTITY;
     public bool isBlocking;
+    public int animState;
+    public int blockState;
+    int attacked = 0;
 
     // Start is called before the first frame update
     void Start()
@@ -54,6 +58,7 @@ public class PlayerController : MonoBehaviour
         blockCharge = BLOCK_QUANTITY + 0;
         isBlocking = false;
         
+
     }
 
     // Update is called once per frame
@@ -62,28 +67,50 @@ public class PlayerController : MonoBehaviour
         AttackMechanism();
     }
     void AttackMechanism(){
+        bool hasGone = false;
         if(attackCooldown == 0){
             if(Input.GetKey(KeyCode.J)){
+                attacked = 2;
+                hasGone = true;
                 Attack("Light");
             }
             if(Input.GetKey(KeyCode.K)){
+                attacked = 3;
+                hasGone = true;
                 Attack("Heavy");
             }
         }if(specialCooldown == 0){
             if(Input.GetKey(KeyCode.L)){
+                attacked = 4;
+                hasGone= true;
                 Attack("Special");
             }
         }
         if (Input.GetKey(KeyCode.B))
         {
+            attacked = 5;
+            hasGone = true;
+            if (isBlocking)
+            {
+                blockState = 2;
+            }
+            else
+            {
+                blockState = 1;
+            }
             isBlocking = true;
         }
         else
         {
             isBlocking = false;
+            blockState = 0;
         }
         if (Input.GetKeyDown(KeyCode.Semicolon)){
             //enter /  interact button
+        }
+        if (!hasGone)
+        {
+            attacked = 0;
         }
     }
     public void Attacked(float damage, string debuff = "", int debuffTime = 0)
@@ -104,6 +131,33 @@ public class PlayerController : MonoBehaviour
         if (debuffTime != 0)
         {
         }
+    }
+    void AnimationSetup()
+    {
+        int finalDir = dirFacing;
+        if (dirFacing == 3)
+        {
+            finalDir = 1;
+            SpriteRenderer.flipX = true;
+        }
+        else
+        {
+            SpriteRenderer.flipX = false;
+        }
+        if ((runningX || runningY) && attacked == 0)
+        {
+            animState = 1;
+        }else
+        {
+            animState = 0;
+        }
+        if(attacked != 0){
+            animState = attacked;
+        }
+        Debug.Log("animState: " + animState+"; Facing: "+finalDir);
+        animator.SetInteger("state", animState);
+        animator.SetInteger("facing", finalDir);
+        animator.SetInteger("blockState", blockState);
     }
     
     void MovementMechanism()
@@ -282,6 +336,7 @@ public class PlayerController : MonoBehaviour
         {
             blockCharge+=0.5F;
         }
+        AnimationSetup();
     }
     void collisionBehavior(Collision2D collision){
         Vector2 collisionVector;
