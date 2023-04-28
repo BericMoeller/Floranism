@@ -57,14 +57,22 @@ public class PlayerController : MonoBehaviour
         BLOCK_QUANTITY = 30;
         blockCharge = BLOCK_QUANTITY + 0;
         isBlocking = false;
-        
-
+        health = 0 + MAX_HEALTH;
     }
 
     // Update is called once per frame
     void Update(){
         MovementMechanism();
         AttackMechanism();
+    }
+
+    public void AddHealth(int healthMod)
+    {
+        health += healthMod;
+        if(health > MAX_HEALTH)
+        {
+            health = MAX_HEALTH + 0;
+        }
     }
     void AttackMechanism(){
         bool hasGone = false;
@@ -296,6 +304,9 @@ public class PlayerController : MonoBehaviour
         for(int i = 0; i < collidersInRange.Length; i++){
             if(collidersInRange[i].tag == "Enemy"){
                 collidersInRange[i].gameObject.GetComponent<EnemyController>().Attacked(damage);
+            }else if (collidersInRange[i].tag == "DestructableObject")
+            {
+                collidersInRange[i].gameObject.GetComponent<DestructableObject>().Attacked(damage);
             }
         }
     }

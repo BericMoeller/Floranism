@@ -31,10 +31,15 @@ public class EnemyController : MonoBehaviour
 
     void Start()
     {
+        InitializeEnemyController();
+    }
+
+    public void InitializeEnemyController()
+    {
         gameObject.tag = "Enemy";
         paranoiaLevel = 150; //decreasing this increases the speed that scans occur
         //^ I can modify this later so it triggers more often when players are being annoying
-        maxHealth = 100; //^or if i'm bored it'd be a fun gamemode to have everything hate you
+        maxHealth = 50; //^or if i'm bored it'd be a fun gamemode to have everything hate you
         health = maxHealth + 0; //^ irl simulator
         MOVEMENT_SPEED = 0.02F;
         debuffs = new List<string[]>();
@@ -47,22 +52,27 @@ public class EnemyController : MonoBehaviour
         canGoDown = true;
         RADIUS = 0.55F; // this needs to stay 0.05 above for collision's sake
         cornerBuffer = 0.3F;
-        ATTACK_RADIUS = 0.75F;
-        ATTACK_COOLDOWN = 20;
+        ATTACK_RADIUS = 0.5F;
+        ATTACK_COOLDOWN = 40;
         timeSinceLastAttack = 0;
         DAMAGE = 15;
     }
 
     void Update()
     {
+        if (health < 0) {
+            Destroy(gameObject);
+        }
     }
 
     void FixedUpdate()
     {
+        
         MakeMovementDecision(); //all of this runs once per tick. jeez
         Attack();
         ticksSinceLastScan++;
         timeSinceLastAttack++;
+        
     }
 
     public float GetHealth()
