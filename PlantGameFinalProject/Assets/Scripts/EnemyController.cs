@@ -27,6 +27,9 @@ public class EnemyController : MonoBehaviour
     private int ATTACK_COOLDOWN;
     public int timeSinceLastAttack;
     private int DAMAGE;
+    public bool isAttacking = false;
+    Animator animator;
+    SpriteRenderer SpriteRenderer;
 
 
     void Start()
@@ -56,6 +59,8 @@ public class EnemyController : MonoBehaviour
         ATTACK_COOLDOWN = 40;
         timeSinceLastAttack = 0;
         DAMAGE = 15;
+        animator = GetComponent<Animator>();
+        SpriteRenderer = GetComponent<SpriteRenderer>();
     }
 
     void Update()
@@ -70,6 +75,7 @@ public class EnemyController : MonoBehaviour
         
         MakeMovementDecision(); //all of this runs once per tick. jeez
         Attack();
+        AnimSetup();
         ticksSinceLastScan++;
         timeSinceLastAttack++;
         
@@ -93,6 +99,21 @@ public class EnemyController : MonoBehaviour
         }
     }
 
+    void AnimSetup()
+    {
+        int finalDir = dirFacing;
+        if(dirFacing == 3)
+        {
+            finalDir = 1;
+            SpriteRenderer.flipX = true;
+        }
+        else
+        {
+            SpriteRenderer.flipX = false;
+        }
+        animator.SetInteger("facing", finalDir);
+        animator.SetBool("isAttacking", isAttacking);
+    }
     void Attack()
     {
         bool foundPlayer = false;
@@ -110,11 +131,30 @@ public class EnemyController : MonoBehaviour
         if (foundPlayer && timeSinceLastAttack > ATTACK_COOLDOWN)
         {
             timeSinceLastAttack = 0;
+            isAttacking = true;
             hits[playerIndex].collider.gameObject.GetComponent<PlayerController>().Attacked(DAMAGE);
 
         }
+        else
+        {
+            isAttacking = false;
+        }
     }
 
+    void DirectionCalculate(Vector2 dir)
+    {
+        bool facingH = false;
+        int endDir = 0;
+        if (Mathf.Abs(dir.x) > Mathf.Abs(dir.y))
+        {
+            facingH = true;
+        }
+        if (facingH && dir.x > 0) { endDir = 3; }
+        else if (facingH) { endDir = 1; }
+        else if(dir.y > 0) { endDir = 0; }
+        else { endDir = 2; }
+        dirFacing = endDir;
+    }
 
     RaycastHit2D CheckVision(bool changePower = false, Vector2 scanAngle = default)
     { //checks vision at angle or direction facing
@@ -432,6 +472,7 @@ public class EnemyController : MonoBehaviour
         {
             movementDir.y = 0F;
         }
+        DirectionCalculate(movementDir);
         transform.position += (Vector3)(movementDir)*MOVEMENT_SPEED;
     }
     float BoundsOffset(int idealIndex, RaycastHit2D[] allHits) //does a bunch of math to find out how far we need to overshoot to get around corners

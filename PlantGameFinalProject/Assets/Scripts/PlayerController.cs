@@ -37,6 +37,7 @@ public class PlayerController : MonoBehaviour
     public bool isBlocking;
     public int animState;
     public int blockState;
+    public int animCooldown;
     int attacked = 0;
 
     // Start is called before the first frame update
@@ -50,7 +51,7 @@ public class PlayerController : MonoBehaviour
         animator = GetComponent<Animator>();
         SpriteRenderer = GetComponent<SpriteRenderer>();
         gameObject.tag = "Player";
-        RANGE_OF_ATTACK = new Vector2(1,0);
+        RANGE_OF_ATTACK = new Vector2(2F,0);
         ATTACK_COOLDOWN_H = 50;
         ATTACK_COOLDOWN_L = 15;
         SPECIAL_COOLDOWN = 180;
@@ -75,32 +76,31 @@ public class PlayerController : MonoBehaviour
         }
     }
     void AttackMechanism(){
-        bool hasGone = false;
         if(attackCooldown == 0){
             if(Input.GetKey(KeyCode.J)){
                 attacked = 2;
-                hasGone = true;
                 Attack("Light");
+                animCooldown += ATTACK_COOLDOWN_L / 2;
             }
             if(Input.GetKey(KeyCode.K)){
                 attacked = 3;
-                hasGone = true;
                 Attack("Heavy");
+                animCooldown += ATTACK_COOLDOWN_H / 2;
             }
         }if(specialCooldown == 0){
             if(Input.GetKey(KeyCode.L)){
                 attacked = 4;
-                hasGone= true;
                 Attack("Special");
+                animCooldown += SPECIAL_COOLDOWN / 3;
             }
         }
         if (Input.GetKey(KeyCode.B))
         {
             attacked = 5;
-            hasGone = true;
             if (isBlocking)
             {
                 blockState = 2;
+                animCooldown = 2;
             }
             else
             {
@@ -115,10 +115,6 @@ public class PlayerController : MonoBehaviour
         }
         if (Input.GetKeyDown(KeyCode.Semicolon)){
             //enter /  interact button
-        }
-        if (!hasGone)
-        {
-            attacked = 0;
         }
     }
     public void Attacked(float damage, string debuff = "", int debuffTime = 0)
@@ -152,17 +148,18 @@ public class PlayerController : MonoBehaviour
         {
             SpriteRenderer.flipX = false;
         }
-        if ((runningX || runningY) && attacked == 0)
+        if (runningX || runningY)
         {
             animState = 1;
-        }else
+        }else if (animCooldown == 0)
         {
             animState = 0;
+            attacked = 0;
         }
         if(attacked != 0){
             animState = attacked;
         }
-        Debug.Log("animState: " + animState+"; Facing: "+finalDir);
+        //Debug.Log("animState: " + animState+"; Facing: "+finalDir);
         animator.SetInteger("state", animState);
         animator.SetInteger("facing", finalDir);
         animator.SetInteger("blockState", blockState);
@@ -347,6 +344,7 @@ public class PlayerController : MonoBehaviour
         {
             blockCharge+=0.5F;
         }
+        if(animCooldown > 0) { animCooldown--;}
         AnimationSetup();
     }
     void collisionBehavior(Collision2D collision){
