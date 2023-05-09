@@ -5,6 +5,7 @@ using UnityEngine;
 public class CameraTracker : MonoBehaviour
 {
     public GameObject player;
+    public float CameraOffset;
     // Start is called before the first frame update
     void Start()
     {
@@ -16,7 +17,7 @@ public class CameraTracker : MonoBehaviour
     {
         if (player != null)
         {
-            transform.position = new Vector3(player.transform.position.x, player.transform.position.y, -10.0F);
+            transform.position = new Vector3(player.transform.position.x, player.transform.position.y, CameraOffset);
         }
     }
     public void UpdatePlayer(GameObject playerIn)

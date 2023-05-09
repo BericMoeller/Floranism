@@ -61,7 +61,7 @@ AnimatorTransition:
   - m_ConditionMode: 6
     m_ConditionEvent: facing
     m_EventTreshold: 2
-  m_DstStateMachine: {fileID: -2146612571333025062}
+  m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 0}
   m_Solo: 0
   m_Mute: 0
@@ -1655,21 +1655,21 @@ AnimatorStateMachine:
   m_AnyStateTransitions: []
   m_EntryTransitions: []
   m_StateMachineTransitions:
-  - first: {fileID: 3674411300913319079}
-    second:
-    - {fileID: -874520031420113452}
-    - {fileID: -3936728454718668352}
-    - {fileID: -4558179502094416759}
-  - first: {fileID: 788487288843199425}
-    second:
-    - {fileID: -2943627681868614928}
-    - {fileID: -1178362522454297050}
-    - {fileID: -664272448998776664}
   - first: {fileID: 8100297726961943195}
     second:
     - {fileID: 4818174068490749645}
     - {fileID: 6363925114740050687}
     - {fileID: -7519126651341791386}
+  - first: {fileID: 788487288843199425}
+    second:
+    - {fileID: -2943627681868614928}
+    - {fileID: -1178362522454297050}
+    - {fileID: -664272448998776664}
+  - first: {fileID: 3674411300913319079}
+    second:
+    - {fileID: -874520031420113452}
+    - {fileID: -3936728454718668352}
+    - {fileID: -4558179502094416759}
   m_StateMachineBehaviours: []
   m_AnyStatePosition: {x: 680, y: 40, z: 0}
   m_EntryPosition: {x: 580, y: 260, z: 0}
@@ -1770,7 +1770,10 @@ AnimatorStateTransition:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: 
-  m_Conditions: []
+  m_Conditions:
+  - m_ConditionMode: 6
+    m_ConditionEvent: state
+    m_EventTreshold: 5
   m_DstStateMachine: {fileID: 4199455732703463942}
   m_DstState: {fileID: 0}
   m_Solo: 0
@@ -1927,7 +1930,10 @@ AnimatorStateTransition:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: 
-  m_Conditions: []
+  m_Conditions:
+  - m_ConditionMode: 6
+    m_ConditionEvent: state
+    m_EventTreshold: 5
   m_DstStateMachine: {fileID: 5610980170390518685}
   m_DstState: {fileID: 0}
   m_Solo: 0
@@ -2463,7 +2469,10 @@ AnimatorStateTransition:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: 
-  m_Conditions: []
+  m_Conditions:
+  - m_ConditionMode: 6
+    m_ConditionEvent: state
+    m_EventTreshold: 5
   m_DstStateMachine: {fileID: -5920372486907036705}
   m_DstState: {fileID: 0}
   m_Solo: 0

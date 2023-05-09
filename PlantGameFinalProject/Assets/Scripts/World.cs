@@ -11,6 +11,7 @@ public class World : MonoBehaviour
     public GameObject playerObject;
     public GameObject enemyObject1;
     public GameObject CameraObject;
+    public GameObject HealthObject;
     private List<GameObject> enemies = new List<GameObject>();
     private int baseX = 0;
     private int basey = 0;
@@ -98,6 +99,8 @@ public class World : MonoBehaviour
                         newObject.SetActive(true);
                         if (newObject.CompareTag("Player")){
                             CameraObject.GetComponent<CameraTracker>().UpdatePlayer(newObject);
+                            HealthObject.GetComponent<CameraTracker>().UpdatePlayer(newObject);
+                            HealthObject.GetComponent<HealthBarController>().UpdatePlayer(newObject);
                         }
                     }
                     x += tileSize;

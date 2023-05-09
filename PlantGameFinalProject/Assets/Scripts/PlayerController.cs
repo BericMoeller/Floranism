@@ -51,7 +51,7 @@ public class PlayerController : MonoBehaviour
         animator = GetComponent<Animator>();
         SpriteRenderer = GetComponent<SpriteRenderer>();
         gameObject.tag = "Player";
-        RANGE_OF_ATTACK = new Vector2(2F,0);
+        RANGE_OF_ATTACK = new Vector2(1.5F,0);
         ATTACK_COOLDOWN_H = 50;
         ATTACK_COOLDOWN_L = 15;
         SPECIAL_COOLDOWN = 180;
@@ -66,6 +66,7 @@ public class PlayerController : MonoBehaviour
         MovementMechanism();
         AttackMechanism();
     }
+
 
     public void AddHealth(int healthMod)
     {

@@ -55,10 +55,10 @@ public class EnemyController : MonoBehaviour
         canGoDown = true;
         RADIUS = 0.55F; // this needs to stay 0.05 above for collision's sake
         cornerBuffer = 0.3F;
-        ATTACK_RADIUS = 0.5F;
+        ATTACK_RADIUS = 0.4F;
         ATTACK_COOLDOWN = 40;
         timeSinceLastAttack = 0;
-        DAMAGE = 15;
+        DAMAGE = 5;
         animator = GetComponent<Animator>();
         SpriteRenderer = GetComponent<SpriteRenderer>();
     }
@@ -67,6 +67,9 @@ public class EnemyController : MonoBehaviour
     {
         if (health < 0) {
             Destroy(gameObject);
+        }else if(health < maxHealth/2)
+        {
+            SpriteRenderer.color = new Color(255, 0, 0);
         }
     }
 
