@@ -7,6 +7,12 @@ TagManager:
   - Enemy
   - Wall
   - DestructableObject
+  - Trellis
+  - World
+  - UI
+  - Decoration
+  - Floor
+  - Wall2
   layers:
   - Default
   - TransparentFX

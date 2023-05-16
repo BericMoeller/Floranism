@@ -56,9 +56,9 @@ public class EnemyController : MonoBehaviour
         RADIUS = 0.55F; // this needs to stay 0.05 above for collision's sake
         cornerBuffer = 0.3F;
         ATTACK_RADIUS = 0.4F;
-        ATTACK_COOLDOWN = 40;
+        ATTACK_COOLDOWN = 50;
         timeSinceLastAttack = 0;
-        DAMAGE = 5;
+        DAMAGE = 3;
         animator = GetComponent<Animator>();
         SpriteRenderer = GetComponent<SpriteRenderer>();
     }
@@ -242,7 +242,7 @@ public class EnemyController : MonoBehaviour
                     {
                         if (hits[i].distance > largestDist)
                         {
-                            Debug.Log(hits[i].distance);
+                            //Debug.Log(hits[i].distance);
                             largestIndex = i;
                             largestDist = hits[i].distance;
                         }
@@ -413,7 +413,7 @@ public class EnemyController : MonoBehaviour
             }
             float rad = Mathf.Deg2Rad * targetDeg;
             Vector2 directionModded = new Vector2(Mathf.Cos(rad), Mathf.Sin(rad));
-            Debug.Log("Degree Heading: " + degToAvoid+"; Final Direction: " + targetDeg + "; Radial Conversion: " + rad+ "; DirectionModded: " + directionModded);
+            //Debug.Log("Degree Heading: " + degToAvoid+"; Final Direction: " + targetDeg + "; Radial Conversion: " + rad+ "; DirectionModded: " + directionModded);
             return directionModded;
         }
         else
@@ -512,7 +512,7 @@ public class EnemyController : MonoBehaviour
     }
     void CollisionBehavior(Collision2D collision) //just checks what directions we can't move in (yanked this straight from playerController)
     {
-        Debug.Log("collision");
+        //Debug.Log("collision");
         Vector2 collisionVector;
         bool xCollision = false;
         bool yCollision = false;

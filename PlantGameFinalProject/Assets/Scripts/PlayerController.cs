@@ -39,6 +39,9 @@ public class PlayerController : MonoBehaviour
     public int blockState;
     public int animCooldown;
     int attacked = 0;
+    public GameObject levelControllerObject;
+    private LevelController levelController;
+    public bool growingOnTrellis = false;
 
     // Start is called before the first frame update
     void Start()
@@ -59,12 +62,20 @@ public class PlayerController : MonoBehaviour
         blockCharge = BLOCK_QUANTITY + 0;
         isBlocking = false;
         health = 0 + MAX_HEALTH;
+        levelController = levelControllerObject.GetComponent<LevelController>();
     }
 
     // Update is called once per frame
     void Update(){
-        MovementMechanism();
-        AttackMechanism();
+        if (!growingOnTrellis)
+        {
+            MovementMechanism();
+            AttackMechanism();
+        }
+        if(health < 0)
+        {
+            Destroy(gameObject);
+        }
     }
 
 
@@ -115,7 +126,7 @@ public class PlayerController : MonoBehaviour
             blockState = 0;
         }
         if (Input.GetKeyDown(KeyCode.Semicolon)){
-            //enter /  interact button
+            StartCoroutine(ScanForTrellis());
         }
     }
     public void Attacked(float damage, string debuff = "", int debuffTime = 0)
@@ -297,7 +308,7 @@ public class PlayerController : MonoBehaviour
             default:
                 break;
         }
-        Debug.Log("Attack Style = "+attackStyle+"; Damage = "+damage);
+        //Debug.Log("Attack Style = "+attackStyle+"; Damage = "+damage);
         Collider2D[] collidersInRange= Physics2D.OverlapCapsuleAll(new Vector2(transform.position.x,transform.position.y), RANGE_OF_ATTACK, CapsuleDirection2D.Vertical, angle);
         for(int i = 0; i < collidersInRange.Length; i++){
             if(collidersInRange[i].tag == "Enemy"){
@@ -383,6 +394,30 @@ public class PlayerController : MonoBehaviour
             canGoDown = true;
         }
     }
+    IEnumerator ScanForTrellis()
+    {
+        bool foundTrellis = false;
+        int trellisIndex = -1;
+        RaycastHit2D[] hits = Physics2D.CircleCastAll(transform.position, 1F, Vector2.up);
+        for (int i = 0; i < hits.Length; i++)
+        {
+            if (hits[i].collider.CompareTag("Trellis"))
+            {
+                foundTrellis = true;
+                trellisIndex = i;
+                break;
+            }
+        }
+        if(foundTrellis)
+        {
+            growingOnTrellis = true;
+            hits[trellisIndex].collider.gameObject.GetComponent<TrellisController>().StartGrowing();
+            yield return new WaitForSeconds(10);
+            levelController.MoveUp();
+            
+        }
+    }
+
     private void OnCollisionEnter2D(Collision2D collision)
     {
         collisionBehavior(collision);
