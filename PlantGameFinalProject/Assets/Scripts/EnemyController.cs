@@ -294,10 +294,13 @@ public class EnemyController : MonoBehaviour
 
     void ChasePlayer()
     { // Chases player(duh)
-        this.playerChasingVector = targetedPlayer.transform.position - transform.position;
-        RaycastHit2D[] hitsArray = CheckWalkingIntoSomething(true);
-        dirWalking = ChasingMovementDecision(this.playerChasingVector);
-        EnemyMove(dirWalking);
+        if (targetedPlayer)
+        {
+            this.playerChasingVector = targetedPlayer.transform.position - transform.position;
+            RaycastHit2D[] hitsArray = CheckWalkingIntoSomething(true);
+            dirWalking = ChasingMovementDecision(this.playerChasingVector);
+            EnemyMove(dirWalking);
+        }
     }
 
     Vector2 ChasingMovementDecision(Vector2 idealDirection)
@@ -439,7 +442,7 @@ public class EnemyController : MonoBehaviour
             angle = scanLimiter * i;
             itemScanned = CheckVision(true, new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)));
             //Debug.Log(angle+"-"+i);
-            if (!returnAnyways && itemScanned.collider.CompareTag("Player"))
+            if (itemScanned && (!returnAnyways && itemScanned.collider.CompareTag("Player")))
             {
                 targetedPlayer = itemScanned.collider;
                 wandering = false;

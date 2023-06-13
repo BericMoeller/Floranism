@@ -367,20 +367,20 @@ public class PlayerController : MonoBehaviour
             collisionVector = collision.GetContact(i).normal;
             if(collisionVector.x > 0){
                 canGoLeft = false;
-                velocity.x = 0.0F;
+                velocity.x = 0.03F;
                 xCollision = true;
             }else if (collisionVector.x < 0){
                 canGoRight = false;
-                velocity.x = 0.0F;
+                velocity.x = -0.03F;
                 xCollision = true;
             }
             if(collisionVector.y > 0){
                 canGoDown = false;
-                velocity.y = 0.0F;
+                velocity.y = 0.03F;
                 yCollision = true;
             }else if (collisionVector.y < 0){
                 canGoUp = false;
-                velocity.y = 0.0F;
+                velocity.y = -0.03F;
                 yCollision = true;
             }
         }
